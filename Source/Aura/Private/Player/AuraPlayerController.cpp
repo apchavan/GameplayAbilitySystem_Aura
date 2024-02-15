@@ -25,8 +25,11 @@ void AAuraPlayerController::BeginPlay()
 
 	// Add InputMappingContext to controller.
 	UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(GetLocalPlayer());
-	check(Subsystem);
-	Subsystem->AddMappingContext(AuraContext, 0);
+	// Instead of using assertion `check()`, here we need to just check whether `Subsystem` is valid to make it work in multi-player.
+	if (Subsystem)
+	{
+		Subsystem->AddMappingContext(AuraContext, 0);
+	}
 
 	// Show mouse cursor.
 	bShowMouseCursor = true;
