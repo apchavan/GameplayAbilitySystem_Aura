@@ -33,6 +33,9 @@ void AAuraHUD::InitOverlay(APlayerController* PC, APlayerState* PS, UAbilitySyst
 	// Set widget controller for overlay widget.
 	OverlayWidget->SetWidgetController(WidgetController);
 
+	// Broadcast initial values after setting widget controller with overlay widget.
+	WidgetController->BroadcastInitialValues();
+
 	// Finally add widget to the view port.
 	Widget->AddToViewport();
 }
