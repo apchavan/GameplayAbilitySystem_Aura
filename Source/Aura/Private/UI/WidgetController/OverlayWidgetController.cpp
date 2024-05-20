@@ -12,7 +12,7 @@ void UOverlayWidgetController::BroadcastInitialValues()
 	OnHealthChanged.Broadcast(AuraAttributeSet->GetHealth());
 	OnMaxHealthChanged.Broadcast(AuraAttributeSet->GetMaxHealth());
 	OnManaChanged.Broadcast(AuraAttributeSet->GetMana());
-	OnMaxManaCHanged.Broadcast(AuraAttributeSet->GetMaxMana());
+	OnMaxManaChanged.Broadcast(AuraAttributeSet->GetMaxMana());
 }
 
 void UOverlayWidgetController::BindCallbacksToDependencies()
@@ -53,5 +53,5 @@ void UOverlayWidgetController::ManaChanged(const FOnAttributeChangeData& Data) c
 
 void UOverlayWidgetController::MaxManaChanged(const FOnAttributeChangeData& Data) const
 {
-	OnMaxManaCHanged.Broadcast(Data.NewValue);
+	OnMaxManaChanged.Broadcast(Data.NewValue);
 }
