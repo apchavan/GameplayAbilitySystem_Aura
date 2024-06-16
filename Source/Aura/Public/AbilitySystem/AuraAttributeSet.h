@@ -23,7 +23,10 @@ class AURA_API UAuraAttributeSet : public UAttributeSet
 
 public:
 	UAuraAttributeSet();
+
 	virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+	virtual void PreAttributeChange(const FGameplayAttribute& Attribute, float& NewValue) override;
 
 	// Health attribute.
 	UPROPERTY(BlueprintReadOnly, ReplicatedUsing = OnRep_Health, Category = "Vital Attributes")
