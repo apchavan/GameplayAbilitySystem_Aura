@@ -84,7 +84,7 @@ void AAuraPlayerController::CursorTrace()
 	// Store previous actor and current actor under cursor.
 	// For current actor, performing type casting will ensure it's an enemy actor.
 	LastActor = ThisActor;
-	ThisActor = Cast<IEnemyInterface>(CursorHit.GetActor());
+	ThisActor = CursorHit.GetActor();
 
 	/**
 	 * Line trace from cursor. There're several scenarios:
