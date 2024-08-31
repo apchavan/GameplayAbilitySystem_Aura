@@ -58,4 +58,6 @@ void AAuraCharacter::InitAbilityActorInfo()
 			AuraHUD->InitOverlay(AuraPlayerController, AuraPlayerState, AbilitySystemComponent, AttributeSet);
 		}
 	}
+	// Initialize primary attributes by applying an instant Gameplay Effect set in Blueprints.
+	InitializePrimaryAttributes();
 }
