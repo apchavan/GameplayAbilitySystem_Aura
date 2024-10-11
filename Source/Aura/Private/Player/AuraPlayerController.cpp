@@ -4,14 +4,18 @@
 #include "Player/AuraPlayerController.h"
 
 #include "AbilitySystemBlueprintLibrary.h"
+#include "AuraGameplayTags.h"
 #include "EnhancedInputSubsystems.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
+#include "Components/SplineComponent.h"
 #include "Input/AuraInputComponent.h"
 #include "Interaction/EnemyInterface.h"
 
 AAuraPlayerController::AAuraPlayerController()
 {
 	bReplicates = true;
+
+	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
 }
 
 void AAuraPlayerController::PlayerTick(float DeltaTime)
@@ -93,7 +97,6 @@ void AAuraPlayerController::CursorTrace()
 	if (!CursorHit.bBlockingHit) return;
 
 	// Store previous actor and current actor under cursor.
-	// For current actor, performing type casting will ensure it's an enemy actor.
 	LastActor = ThisActor;
 	ThisActor = CursorHit.GetActor();
 
@@ -140,7 +143,16 @@ void AAuraPlayerController::CursorTrace()
 
 void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
-	//GEngine->AddOnScreenDebugMessage(1, 3.0f, FColor::Red, *InputTag.ToString());
+	// Check whether the `InputTag` pressed is LMB, because it can either move character or activate the ability.
+	if (InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
+	{
+		// If `ThisActor` is valid, it means user is trying to target some other actor like an enemy.
+		bTargeting = ThisActor ? true : false;
+
+		// We should not be auto-running because it's not clear yet whether this is a short press.
+		// If it is short press, then we can auto-run but here we don't know yet until we release this LMB input.
+		bAutoRunning = false;
+	}
 }
 
 void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
@@ -151,8 +163,50 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
-	if (GetASC() == nullptr) return;
-	GetASC()->AbilityInputTagHeld(InputTag);
+	// If the `InputTag` is NOT the LMB input, we can try to activate the ability.
+	// Because here we don't auto-run or move character.
+	// Except the LMB input, all other held inputs will be managed here to activate their related abilities.
+	if (!InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagHeld(InputTag);
+		}
+		return;
+	}
+
+	// If targeting an actor with LMB, then still we want to activate the related ability.
+	if (bTargeting)
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagHeld(InputTag);
+		}
+	}
+	else
+	{
+		// Manage click-to-move behavior using LMB input.
+
+		// Set total time the LMB input is being pressed.
+		FollowTime += GetWorld()->GetDeltaSeconds();
+
+		// Get the destination in world location.
+		FHitResult Hit;
+		if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
+		{
+			// We can either use `Hit.Location` or `Hit.ImpactPoint` because for line trace, they are the same.
+			// But for other trace shapes like box/sphere these will be different.
+			CachedDestination = Hit.ImpactPoint;
+		}
+
+		// Move towards the destination.
+		if (APawn* ControlledPawn = GetPawn<APawn>())
+		{
+			// The normalized vector from `ControlledPawn` to `CachedDestination` indicates world direction.
+			const FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+			ControlledPawn->AddMovementInput(WorldDirection);
+		}
+	}
 }
 
 UAuraAbilitySystemComponent* AAuraPlayerController::GetASC()
