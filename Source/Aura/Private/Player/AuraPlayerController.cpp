@@ -6,6 +6,8 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AuraGameplayTags.h"
 #include "EnhancedInputSubsystems.h"
+#include "NavigationPath.h"
+#include "NavigationSystem.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "Components/SplineComponent.h"
 #include "Input/AuraInputComponent.h"
@@ -146,7 +148,7 @@ void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 	// Check whether the `InputTag` pressed is LMB, because it can either move character or activate the ability.
 	if (InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
 	{
-		// If `ThisActor` is valid, it means user is trying to target some other actor like an enemy.
+		// If `ThisActor` is valid, it means the user is trying to target some actor, like an enemy.
 		bTargeting = ThisActor ? true : false;
 
 		// We should not be auto-running because it's not clear yet whether this is a short press.
@@ -157,8 +159,50 @@ void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 
 void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
-	if (GetASC() == nullptr) return;
-	GetASC()->AbilityInputTagReleased(InputTag);
+	if (!InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagReleased(InputTag);
+		}
+		return;
+	}
+
+	if (bTargeting)
+	{
+		if (GetASC())
+		{
+			GetASC()->AbilityInputTagReleased(InputTag);
+		}
+	}
+	else
+	{
+		APawn* ControlledPawn = GetPawn<APawn>();
+
+		// Check whether this was a short press or not, with a valid controlled Pawn.
+		if (FollowTime <= ShortPressThreshold && ControlledPawn)
+		{
+			// Create a navigation path, i.e. a set of points to follow.
+			if (UNavigationPath* NavPath = UNavigationSystemV1::FindPathToLocationSynchronously(this, ControlledPawn->GetActorLocation(), CachedDestination))
+			{
+				Spline->ClearSplinePoints();
+				for (const FVector& PointLoc : NavPath->PathPoints)
+				{
+					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
+					DrawDebugSphere(GetWorld(), PointLoc, 8.0f, 8, FColor::Green, false, 5.0f);
+				}
+
+				// Set the auto-running since we have navigation points ready.
+				bAutoRunning = true;
+			}
+		}
+
+		// Reset total pressed time for the LMB input.
+		FollowTime = 0.0f;
+
+		// Reset the targeting status.
+		bTargeting = false;
+	}
 }
 
 void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
@@ -175,7 +219,7 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		return;
 	}
 
-	// If targeting an actor with LMB, then still we want to activate the related ability.
+	// If targeting an actor with LMB input, then still we want to activate the related ability.
 	if (bTargeting)
 	{
 		if (GetASC())
@@ -187,7 +231,7 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 	{
 		// Manage click-to-move behavior using LMB input.
 
-		// Set total time the LMB input is being pressed.
+		// Add up total time the LMB input is being pressed.
 		FollowTime += GetWorld()->GetDeltaSeconds();
 
 		// Get the destination in world location.
