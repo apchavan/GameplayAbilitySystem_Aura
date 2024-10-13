@@ -16,7 +16,6 @@
 AAuraPlayerController::AAuraPlayerController()
 {
 	bReplicates = true;
-
 	Spline = CreateDefaultSubobject<USplineComponent>("Spline");
 }
 
@@ -93,7 +92,6 @@ void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 void AAuraPlayerController::CursorTrace()
 {
 	// Detect the actor under cursor.
-	FHitResult CursorHit;
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 
 	// Return early if there's no blocking hit detected.
@@ -103,44 +101,10 @@ void AAuraPlayerController::CursorTrace()
 	LastActor = ThisActor;
 	ThisActor = CursorHit.GetActor();
 
-	/**
-	 * Line trace from cursor. There're several scenarios:
-	 *  A. LastActor is NULL && ThisActor is NULL
-	 *		- Do nothing
-	 *	B. LastActor is NULL && ThisActor is valid
-	 *		- Highlight ThisActor
-	 *	C. LastActor is valid && ThisActor is NULL
-	 *		- Unhighlight LastActor
-	 *	D. Both actors are valid, but LastActor != ThisActor
-	 *		- Unhighlight LastActor, and Highlight ThisActor
-	 *	E. Both actors are valid, and are the same actor
-	 *		- Do nothing
-	 */
-
-	if (LastActor == nullptr)
+	if (LastActor != ThisActor)
 	{
-		if (ThisActor != nullptr)
-		{
-			// Case B
-			ThisActor->HighlightActor();
-		}
-	}
-	else // LastActor is valid
-	{
-		if (ThisActor == nullptr)
-		{
-			// Case C
-			LastActor->UnHighlightActor();
-		}
-		else // Both actors are valid
-		{
-			if (LastActor != ThisActor)
-			{
-				// Case D
-				LastActor->UnHighlightActor();
-				ThisActor->HighlightActor();
-			}
-		}
+		if (LastActor) LastActor->UnHighlightActor();
+		if (ThisActor) ThisActor->HighlightActor();
 	}
 }
 
@@ -162,23 +126,17 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
 	if (!InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
 	{
-		if (GetASC())
-		{
-			GetASC()->AbilityInputTagReleased(InputTag);
-		}
+		if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
 		return;
 	}
 
 	if (bTargeting)
 	{
-		if (GetASC())
-		{
-			GetASC()->AbilityInputTagReleased(InputTag);
-		}
+		if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
 	}
 	else
 	{
-		APawn* ControlledPawn = GetPawn<APawn>();
+		const APawn* ControlledPawn = GetPawn<APawn>();
 
 		// Check whether this was a short press or not, with a valid controlled Pawn.
 		if (FollowTime <= ShortPressThreshold && ControlledPawn)
@@ -190,7 +148,6 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 				for (const FVector& PointLoc : NavPath->PathPoints)
 				{
 					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
-					DrawDebugSphere(GetWorld(), PointLoc, 8.0f, 8, FColor::Green, false, 5.0f);
 				}
 
 				// Override the destination to last point of `NavPath`.
@@ -217,20 +174,14 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 	// Except the LMB input, all other held inputs will be managed here to activate their related abilities.
 	if (!InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
 	{
-		if (GetASC())
-		{
-			GetASC()->AbilityInputTagHeld(InputTag);
-		}
+		if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
 		return;
 	}
 
 	// If targeting an actor with LMB input, then still we want to activate the related ability.
 	if (bTargeting)
 	{
-		if (GetASC())
-		{
-			GetASC()->AbilityInputTagHeld(InputTag);
-		}
+		if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
 	}
 	else
 	{
@@ -239,14 +190,10 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		// Add up total time the LMB input is being pressed.
 		FollowTime += GetWorld()->GetDeltaSeconds();
 
-		// Get the destination in world location.
-		FHitResult Hit;
-		if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
-		{
-			// We can either use `Hit.Location` or `Hit.ImpactPoint` because for line trace, they are the same.
-			// But for other trace shapes like box/sphere these will be different.
-			CachedDestination = Hit.ImpactPoint;
-		}
+		// If this `CursorHit` was a result of blocking collision.
+		// We can either use `CursorHit.Location` or `CursorHit.ImpactPoint` because for line trace, they are the same.
+		// But for other trace shapes like box/sphere these will be different.
+		if (CursorHit.bBlockingHit) CachedDestination = CursorHit.ImpactPoint;
 
 		// Move towards the destination.
 		if (APawn* ControlledPawn = GetPawn<APawn>())

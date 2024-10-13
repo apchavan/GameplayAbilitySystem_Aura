@@ -46,6 +46,7 @@ private:
 
 	TScriptInterface<IEnemyInterface> LastActor;
 	TScriptInterface<IEnemyInterface> ThisActor;
+	FHitResult CursorHit;
 
 	FVector CachedDestination = FVector::ZeroVector;
 	float FollowTime = 0.0f;
