@@ -25,6 +25,7 @@ void AAuraPlayerController::PlayerTick(float DeltaTime)
 	Super::PlayerTick(DeltaTime);
 
 	CursorTrace();
+	AutoRun();
 }
 
 void AAuraPlayerController::BeginPlay()
@@ -192,6 +193,10 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 					DrawDebugSphere(GetWorld(), PointLoc, 8.0f, 8, FColor::Green, false, 5.0f);
 				}
 
+				// Override the destination to last point of `NavPath`.
+				// This will avoid the issue of un-reachable locations where "NavMeshBoundsVolume" is not covered on the game map.
+				CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
+
 				// Set the auto-running since we have navigation points ready.
 				bAutoRunning = true;
 			}
@@ -260,4 +265,31 @@ UAuraAbilitySystemComponent* AAuraPlayerController::GetASC()
 		AuraAbilitySystemComponent = Cast<UAuraAbilitySystemComponent>(UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(GetPawn<APawn>()));
 	}
 	return AuraAbilitySystemComponent;
+}
+
+void AAuraPlayerController::AutoRun()
+{
+	if (!bAutoRunning) return;
+
+	if (APawn* ControlledPawn = GetPawn<APawn>())
+	{
+		// Find the location on the spline i.e. closest to the Pawn.
+		// Because our Pawn may not be exactly on the spline.
+		const FVector LocationOnSpline = Spline->FindLocationClosestToWorldLocation(ControlledPawn->GetActorLocation(), ESplineCoordinateSpace::World);
+
+		// Find the direction on the spline that corresponds to this location.
+		// Instead of `LocationOnSpline` we can also pass `ControlledPawn->GetActorLocation()`.
+		const FVector Direction = Spline->FindDirectionClosestToWorldLocation(LocationOnSpline, ESplineCoordinateSpace::World);
+
+		// Move towards the destination.
+		ControlledPawn->AddMovementInput(Direction);
+
+		const float DistanceToDestination = (LocationOnSpline - CachedDestination).Length();
+
+		// If the current destination distance is within `AutoRunAcceptanceRadius`, stop auto-running.
+		if (DistanceToDestination <= AutoRunAcceptanceRadius)
+		{
+			bAutoRunning = false;
+		}
+	}
 }

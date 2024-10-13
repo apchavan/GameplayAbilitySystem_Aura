@@ -68,4 +68,5 @@ private:
 	void AbilityInputTagHeld(FGameplayTag InputTag);
 
 	UAuraAbilitySystemComponent* GetASC();
+	void AutoRun();
 };
