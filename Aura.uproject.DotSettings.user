@@ -1,5 +1,7 @@
 ﻿<wpf:ResourceDictionary xml:space="preserve" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:s="clr-namespace:System;assembly=mscorlib" xmlns:ss="urn:shemas-jetbrains-com:settings-storage-xaml" xmlns:wpf="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=242C1434_002D4BD9_002DDAB2_002DA26F_002D2A6227CB53FA_002Fd_003AClasses_002Ff_003AEndTurnCallbackProxy_002Eh/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=6BACF0DA_002D12F6_002D3CFE_002D706E_002DB4EED9060590_002Fd_003APublic_002Fd_003AAbilities_002Ff_003AGameplayAbility_002Eh/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=6BACF0DA_002D12F6_002D3CFE_002D706E_002DB4EED9060590_002Fd_003APublic_002Ff_003AAbilitySystemBlueprintLibrary_002Eh/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=ED6932AC_002D68D1_002D1907_002D6AA5_002D3A8A29FC8E82_002Fd_003AClasses_002Fd_003AEngine_002Ff_003AEngineTypes_002Eh/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Program Files\Epic Games\UE_5.2\Engine\Binaries\DotNET\UnrealBuildTool\UnrealBuildTool.dll" /&gt;&#xD;
