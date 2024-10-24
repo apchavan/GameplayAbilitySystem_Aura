@@ -27,5 +27,12 @@ public:
 private:
 
 	virtual void Activate() override;
+
 	void SendMouseCursorData();
+
+	/**
+	 * Callback function that will be called on the remote server in response to receiving the replicated target data
+	 * from the client(s).
+	 */
+	void OnTargetDataReplicatedCallback(const FGameplayAbilityTargetDataHandle& DataHandle, FGameplayTag ActivationTag);
 };

@@ -19,7 +19,19 @@ void UTargetDataUnderMouse::Activate()
 	}
 	else
 	{
-		// TODO: We are on the server, so listen for target data.
+		const FGameplayAbilitySpecHandle SpecHandle = GetAbilitySpecHandle();
+		const FPredictionKey ActivationPredictionKey = GetActivationPredictionKey();
+
+		// As soon as 'Activate()' is called on the remote server, it'll bind its callback to the delegate.
+		AbilitySystemComponent.Get()->AbilityTargetDataSetDelegate(SpecHandle, ActivationPredictionKey).AddUObject(this, &UTargetDataUnderMouse::OnTargetDataReplicatedCallback);
+
+		// If the delegate is not called (i.e. `false`), it means the target data is not received on the remote server yet.
+		const bool bCalledDelegate = AbilitySystemComponent.Get()->CallReplicatedTargetDataDelegatesIfSet(SpecHandle, ActivationPredictionKey);
+		if (!bCalledDelegate)
+		{
+			// Wait for the target data to be received on the remote server.
+			SetWaitingOnRemotePlayerData();
+		}
 	}
 }
 
@@ -43,6 +55,20 @@ void UTargetDataUnderMouse::SendMouseCursorData()
 		FGameplayTag(),
 		AbilitySystemComponent->ScopedPredictionKey
 	);
+
+	if (ShouldBroadcastAbilityTaskDelegates())
+	{
+		ValidData.Broadcast(DataHandle);
+	}
+}
+
+void UTargetDataUnderMouse::OnTargetDataReplicatedCallback(const FGameplayAbilityTargetDataHandle& DataHandle, FGameplayTag ActivationTag)
+{
+	/**
+	 * Consume the target data from the client & inform the Ability System Component that
+	 * the target data have been received, so do not keep it cached/stored.
+	 */
+	AbilitySystemComponent->ConsumeClientReplicatedTargetData(GetAbilitySpecHandle(), GetActivationPredictionKey());
 
 	if (ShouldBroadcastAbilityTaskDelegates())
 	{
