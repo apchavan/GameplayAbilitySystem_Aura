@@ -25,8 +25,11 @@ void UTargetDataUnderMouse::Activate()
 		// As soon as 'Activate()' is called on the remote server, it'll bind its callback to the delegate.
 		AbilitySystemComponent.Get()->AbilityTargetDataSetDelegate(SpecHandle, ActivationPredictionKey).AddUObject(this, &UTargetDataUnderMouse::OnTargetDataReplicatedCallback);
 
-		// If the delegate is not called (i.e. `false`), it means the target data is not received on the remote server yet.
+		// If the delegate is NOT called (`false`), it means the target data is not yet received on the remote server & next we should wait for it.
+		//
+		// If the delegate is already called (`true`), it means the target data is already received on the remote server then the delegate will re-broadcast.
 		const bool bCalledDelegate = AbilitySystemComponent.Get()->CallReplicatedTargetDataDelegatesIfSet(SpecHandle, ActivationPredictionKey);
+
 		if (!bCalledDelegate)
 		{
 			// Wait for the target data to be received on the remote server.
