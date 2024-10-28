@@ -64,6 +64,9 @@ void AAuraPlayerController::SetupInputComponent()
 
 	AuraInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &AAuraPlayerController::Move);
 
+	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Started, this, &AAuraPlayerController::ShiftPressed);
+	AuraInputComponent->BindAction(ShiftAction, ETriggerEvent::Completed, this, &AAuraPlayerController::ShiftReleased);
+
 	AuraInputComponent->BindAbilityActions(
 		InputConfig,
 		this,
@@ -130,11 +133,11 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 		return;
 	}
 
-	if (bTargeting)
-	{
-		if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
-	}
-	else
+	// Inform the ASC the about LMB input is released.
+	if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
+
+	// Check for short press only if not targeting & 'Shift' key is not pressed. 
+	if (!bTargeting && !bShiftKeyDown)
 	{
 		const APawn* ControlledPawn = GetPawn<APawn>();
 
@@ -178,8 +181,11 @@ void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 		return;
 	}
 
-	// If targeting an actor with LMB input, then still we want to activate the related ability.
-	if (bTargeting)
+	/**
+	 * If targeting an actor with LMB input or if the 'Shift' key is pressed with LMB input,
+	 * then still we want to activate the related ability.
+	 */
+	if (bTargeting || bShiftKeyDown)
 	{
 		if (GetASC()) GetASC()->AbilityInputTagHeld(InputTag);
 	}
