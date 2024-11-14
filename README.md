@@ -4,4 +4,4 @@ Game project developed while learning Udemy course, "[Unreal Engine 5 - Gameplay
 
 Unreal Engine version — `5.2.1-26001984`
 
-***NOTE*** — Due to size limitation, this project does not contain any assets for the game.
+***NOTE*** — Due to size limitation for GitHub repositories, this project does not include any assets for the game, provided by the course.
