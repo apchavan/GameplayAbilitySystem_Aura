@@ -63,6 +63,8 @@ void AAuraEnemy::BeginPlay()
 
 	InitAbilityActorInfo();
 
+	UAuraAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent);
+
 	// 1. Set the Progress Bar's widget controller which is used by `HealthBar` widget component. 
 	if (UAuraUserWidget* AuraUserWidget = Cast<UAuraUserWidget>(HealthBar->GetUserWidgetObject()))
 	{
