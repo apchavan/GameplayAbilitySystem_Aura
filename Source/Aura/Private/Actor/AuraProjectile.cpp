@@ -46,13 +46,16 @@ void AAuraProjectile::BeginPlay()
 	 */
 	LoopingSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, GetRootComponent());
 
-	// Automatically stop the sound when this projectile actor is destroyed.
-	LoopingSoundComponent->bStopWhenOwnerDestroyed = true;
+	// Automatically set to stop the sound when this projectile actor is destroyed.
+	if (IsValid(LoopingSoundComponent))
+	{
+		LoopingSoundComponent->bStopWhenOwnerDestroyed = true;
+	}
 }
 
 void AAuraProjectile::Destroyed()
 {
-	// Handle cosmetic effects only if this is running on the client & already NOT played.
+	// Handle cosmetic effects only if this is running on the client & already NOT hit.
 	if (!bHit && !HasAuthority())
 	{
 		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
@@ -69,12 +72,21 @@ void AAuraProjectile::Destroyed()
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
-	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
-
-	if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
+	if (DamageEffectSpecHandle.Data.IsValid() && DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
 	{
-		LoopingSoundComponent->Stop();
+		return;
+	}
+
+	// Handle cosmetic effects only if already NOT hit.
+	if (!bHit)
+	{
+		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
+
+		if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
+		{
+			LoopingSoundComponent->Stop();
+		}
 	}
 
 	if (HasAuthority())
