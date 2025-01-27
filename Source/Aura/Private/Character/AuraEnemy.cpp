@@ -10,6 +10,9 @@
 #include "Components/WidgetComponent.h"
 #include "UI/Widget/AuraUserWidget.h"
 #include "AuraGameplayTags.h"
+#include "AI/AuraAIController.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BlackboardComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 AAuraEnemy::AAuraEnemy()
@@ -24,6 +27,31 @@ AAuraEnemy::AAuraEnemy()
 
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>("HealthBar");
 	HealthBar->SetupAttachment(GetRootComponent());
+}
+
+void AAuraEnemy::PossessedBy(AController* NewController)
+{
+	Super::PossessedBy(NewController);
+
+	/**
+	 * AI only matters on the server, who has authority.
+	 * They're controlled on the server & anything that clients see is a result of replication.
+	 */
+	if (!HasAuthority())
+	{
+		return;
+	}
+
+	AuraAIController = Cast<AAuraAIController>(NewController);
+
+	/**
+	 * Initialize the Blackboard on the Blackboard Component.
+	 * So whatever Blackboard is associated with our BehaviorTree asset, our AI controller
+	 * needs to take its Blackboard Component & initialize it with that Blackboard asset.
+	 */
+	AuraAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
+
+	AuraAIController->RunBehaviorTree(BehaviorTree);
 }
 
 void AAuraEnemy::HighlightActor()
