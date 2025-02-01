@@ -57,6 +57,14 @@ void AAuraEnemy::PossessedBy(AController* NewController)
 	AuraAIController->GetBlackboardComponent()->InitializeBlackboard(*BehaviorTree->BlackboardAsset);
 
 	AuraAIController->RunBehaviorTree(BehaviorTree);
+
+	AuraAIController->GetBlackboardComponent()->SetValueAsBool("HitReacting", false);
+
+	/**
+	 * Check and set whether the character is a ranged attacker.
+	 * If it's not a Warrior then it belongs to either an Elementalist or a Ranger, and they both can do ranged attacks.
+	 */
+	AuraAIController->GetBlackboardComponent()->SetValueAsBool("RangedAttacker", CharacterClass != ECharacterClass::Warrior);
 }
 
 void AAuraEnemy::HighlightActor()
@@ -92,6 +100,7 @@ void AAuraEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCou
 {
 	bHitReacting = NewCount > 0;
 	GetCharacterMovement()->MaxWalkSpeed = bHitReacting ? 0.0f : BaseWalkSpeed;
+	AuraAIController->GetBlackboardComponent()->SetValueAsBool("HitReacting", bHitReacting);
 }
 
 void AAuraEnemy::BeginPlay()
