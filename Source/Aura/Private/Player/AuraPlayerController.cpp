@@ -167,12 +167,15 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 					Spline->AddSplinePoint(PointLoc, ESplineCoordinateSpace::World);
 				}
 
-				// Override the destination to last point of `NavPath`.
-				// This will avoid the issue of un-reachable locations where "NavMeshBoundsVolume" is not covered on the game map.
-				CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
+				if (NavPath->PathPoints.Num() > 0)
+				{
+					// Override the destination to last point of `NavPath`.
+					// This will avoid the issue of un-reachable locations where "NavMeshBoundsVolume" is not covered on the game map.
+					CachedDestination = NavPath->PathPoints[NavPath->PathPoints.Num() - 1];
 
-				// Set the auto-running since we have navigation points ready.
-				bAutoRunning = true;
+					// Set the auto-running since we have navigation points ready.
+					bAutoRunning = true;
+				}
 			}
 		}
 
