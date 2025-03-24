@@ -24,3 +24,8 @@ course, "[Unreal Engine 5 - Gameplay Ability System - Top Down RPG](https://www.
    this [README.md](./README.md) file.
 3. Since the Unreal Engine's version is `5.2.1-26001984`, the version used for Visual Studio 2022 IDE is `17.11.5`. This
    is to avoid compilation issues encountered for later updated versions of its components and tools.
+4. It may be possible to use the latest version of Visual Studio 2022 IDE but installing the necessary tools like
+   **_MSVC_**, **_Windows SDK_**, **_.NET_** and additional ones like **_LLVM_** will require a manual selection of
+   their versions based on
+   [Setting Up Visual Studio](https://dev.epicgames.com/documentation/en-us/unreal-engine/setting-up-visual-studio-development-environment-for-cplusplus-projects-in-unreal-engine)
+   documentation.
