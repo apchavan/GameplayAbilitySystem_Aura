@@ -73,15 +73,20 @@ void AAuraProjectile::Destroyed()
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (DamageEffectSpecHandle.Data.IsValid() && DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
+	if (!DamageEffectSpecHandle.Data.IsValid() || DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
 	{
-		// Do not apply damage if the effect causer and other actor are the same i.e. avoid damaging effect causer itself.
+		/**
+		 * Do not apply damage if,
+		 * the `DamageEffectSpecHandle.Data` is NOT valid
+		 * OR
+		 * both the effect causer and the `OtherActor` are same, i.e. avoid damaging effect causer itself.
+		 */
 		return;
 	}
 	if (!UAuraAbilitySystemLibrary::IsNotFriend(DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser(), OtherActor))
 	{
 		/**
-		 * Do not apply damage if the effect causer and other actor are from the same team, or they are friends.
+		 * Do not apply damage if the effect causer and `OtherActor` are from the same team, or they are friends.
 		 * This will avoid damaging between enemy versus enemy and player versus player.
 		 */
 		return;
