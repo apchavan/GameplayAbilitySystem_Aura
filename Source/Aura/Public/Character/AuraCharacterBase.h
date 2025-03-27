@@ -8,6 +8,7 @@
 #include "Interaction/CombatInterface.h"
 #include "AuraCharacterBase.generated.h"
 
+class UNiagaraSystem;
 class UGameplayAbility;
 class UGameplayEffect;
 class UAbilitySystemComponent;
@@ -34,6 +35,7 @@ public:
 	virtual bool IsDead_Implementation() const override;
 	virtual AActor* GetAvatar_Implementation() override;
 	virtual TArray<FTaggedMontage> GetAttackMontages_Implementation() override;
+	virtual UNiagaraSystem* GetBloodEffect_Implementation() override;
 
 	/** End Combat Interface */
 
@@ -67,7 +69,10 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName RightHandSocketName;
 
-	// If set to `true` it means this character is dead, otherwise `false`.
+	/**
+	 * If this variable is set to `true`, that means this character is dead.
+	 * Otherwise, by default this variable is set to `false`.
+	 */
 	bool bDead = false;
 
 	UPROPERTY()
@@ -100,6 +105,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadonly)
 	TObjectPtr<UMaterialInstance> WeaponDissolveMaterialInstance;
+
+	UPROPERTY(EditAnywhere, BlueprintReadonly, Category = "Combat")
+	TObjectPtr<UNiagaraSystem> BloodEffect;
 
 private:
 
