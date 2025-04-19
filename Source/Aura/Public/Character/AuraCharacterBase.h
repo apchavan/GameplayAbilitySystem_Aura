@@ -70,9 +70,12 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "Combat")
 	FName RightHandSocketName;
 
+	UPROPERTY(EditAnywhere, Category = "Combat")
+	FName TailSocketName;
+
 	/**
 	 * If this variable is set to `true`, that means this character is dead.
-	 * Otherwise, by default this variable is set to `false`.
+	 * Otherwise, by default, this variable is set to `false`.
 	 */
 	bool bDead = false;
 
