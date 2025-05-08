@@ -139,12 +139,17 @@ int32 AAuraCharacterBase::GetMinionCount_Implementation()
 	return MinionCount;
 }
 
+void AAuraCharacterBase::IncrementMinionCount_Implementation(int32 Amount)
+{
+	MinionCount += Amount;
+}
+
 void AAuraCharacterBase::ApplyEffectToSelf(TSubclassOf<UGameplayEffect> GameplayEffectClass, float Level) const
 {
 	check(IsValid(GetAbilitySystemComponent()))
 	check(GameplayEffectClass);
 	FGameplayEffectContextHandle ContextHandle = GetAbilitySystemComponent()->MakeEffectContext();
-	ContextHandle.AddSourceObject(this);  // It is important to add Source object.
+	ContextHandle.AddSourceObject(this);  // It is important to add a Source object.
 	const FGameplayEffectSpecHandle SpecHandle = GetAbilitySystemComponent()->MakeOutgoingSpec(GameplayEffectClass, Level, ContextHandle);
 	GetAbilitySystemComponent()->ApplyGameplayEffectSpecToTarget(*SpecHandle.Data.Get(), GetAbilitySystemComponent());
 }
