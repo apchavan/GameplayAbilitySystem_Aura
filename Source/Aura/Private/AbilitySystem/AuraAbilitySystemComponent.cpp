@@ -22,6 +22,13 @@ void UAuraAbilitySystemComponent::AddCharacterAbilities(const TArray<TSubclassOf
 			GiveAbility(AbilitySpec);
 		}
 	}
+
+	/**
+	 * Set the boolean status to `true` since the startup abilities are now given to this ASC and then do a broadcast
+	 * of its `AbilitiesGivenDelegate`.
+	 */
+	bStartupAbilitiesGiven = true;
+	AbilitiesGivenDelegate.Broadcast(this);
 }
 
 void UAuraAbilitySystemComponent::AbilityInputTagHeld(const FGameplayTag& InputTag)

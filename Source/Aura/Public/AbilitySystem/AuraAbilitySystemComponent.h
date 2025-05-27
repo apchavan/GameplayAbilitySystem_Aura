@@ -6,7 +6,12 @@
 #include "AbilitySystemComponent.h"
 #include "AuraAbilitySystemComponent.generated.h"
 
+// This forward declaration is required to avoid ambiguity in the following multicast delegate declaration
+// because it uses that as a pointer parameter before the class definition itself.
+class UAuraAbilitySystemComponent;
+
 DECLARE_MULTICAST_DELEGATE_OneParam(FEffectAssetTags, const FGameplayTagContainer& /*AssetTags*/);
+DECLARE_MULTICAST_DELEGATE_OneParam(FAbilitiesGiven, UAuraAbilitySystemComponent*);
 
 /**
  * 
@@ -26,6 +31,22 @@ public:
 	void AbilityInputTagReleased(const FGameplayTag& InputTag);
 
 	FEffectAssetTags EffectAssetTags;
+	FAbilitiesGiven AbilitiesGivenDelegate;
+
+	/**
+	 * A boolean status indicating whether the startup abilities are given to this Ability System Component (ASC).
+	 *
+	 * By default, it is set to `false` and it's updated once the startup abilities are given.
+	 *
+	 * This boolean helps to properly handle two cases:
+	 *
+	 * [1] When the ASC first gives the startup abilities and broadcast `AbilitiesGivenDelegate` BEFORE binding
+	 * the callback function within its widget controller.
+	 *
+	 * [2] When the widget controller first binds the callback function BEFORE the ASC gives the startup abilities and
+	 * broadcast `AbilitiesGivenDelegate`.
+	 */
+	bool bStartupAbilitiesGiven = false;
 
 protected:
 

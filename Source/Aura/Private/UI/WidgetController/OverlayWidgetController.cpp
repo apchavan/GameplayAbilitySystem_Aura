@@ -56,24 +56,55 @@ void UOverlayWidgetController::BindCallbacksToDependencies()
 		}
 	);
 
-	Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent)->EffectAssetTags.AddLambda(
-		[this](const FGameplayTagContainer& AssetTags)
+	if (UAuraAbilitySystemComponent* AuraASC = Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent))
+	{
+		if (AuraASC->bStartupAbilitiesGiven)
 		{
-			for (const FGameplayTag& Tag : AssetTags)
-			{
-				/**
-				 * For example, say that Tag = Message.HealthPotion
-				 * "Message.HealthPotion".MatchesTag("Message") will return True,
-				 * "Message".MatchesTag("Message.HealthPotion") will return False.
-				 */
+			/**
+			 * Case [1]:
+			 * Since the startup abilities were already given and `AbilitiesGivenDelegate` was already broadcasted,
+			 * we just manually call the callback function directly, instead of binding to its
+			 * `AbilitiesGivenDelegate` delegate.
+			 */
+			OnInitializeStartupAbilities(AuraASC);
+		}
+		else
+		{
+			/**
+			 * Case [2]:
+			 * The startup abilities are NOT given yet, so we bind the callback function to its
+			 * `AbilitiesGivenDelegate` delegate.
+			 */
+			AuraASC->AbilitiesGivenDelegate.AddUObject(this, &UOverlayWidgetController::OnInitializeStartupAbilities);
+		}
 
-				FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
-				if (Tag.MatchesTag(MessageTag))
+		AuraASC->EffectAssetTags.AddLambda(
+			[this](const FGameplayTagContainer& AssetTags)
+			{
+				for (const FGameplayTag& Tag : AssetTags)
 				{
-					const FUIWidgetRow* Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, Tag);
-					MessageWidgetRowDelegate.Broadcast(*Row);
+					/**
+					 * For example, say that Tag = Message.HealthPotion
+					 * "Message.HealthPotion".MatchesTag("Message") will return True,
+					 * "Message".MatchesTag("Message.HealthPotion") will return False.
+					 */
+
+					FGameplayTag MessageTag = FGameplayTag::RequestGameplayTag(FName("Message"));
+					if (Tag.MatchesTag(MessageTag))
+					{
+						const FUIWidgetRow* Row = GetDataTableRowByTag<FUIWidgetRow>(MessageWidgetDataTable, Tag);
+						MessageWidgetRowDelegate.Broadcast(*Row);
+					}
 				}
 			}
-		}
-	);
+		);
+	}
+}
+
+void UOverlayWidgetController::OnInitializeStartupAbilities(UAuraAbilitySystemComponent* AuraAbilitySystemComponent)
+{
+	// Return early if the startup abilities are not given.
+	if (!AuraAbilitySystemComponent->bStartupAbilitiesGiven) return;
+
+	// TODO: Get information about all given abilities, look up their Ability Info, and broadcast it to widgets.
 }
