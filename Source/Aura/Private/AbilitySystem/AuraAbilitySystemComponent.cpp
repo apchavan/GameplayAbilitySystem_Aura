@@ -119,6 +119,32 @@ FGameplayTag UAuraAbilitySystemComponent::GetInputTagFromSpec(const FGameplayAbi
 	return FGameplayTag();
 }
 
+void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
+{
+	Super::OnRep_ActivateAbilities();
+
+	/**
+	 * Once the abilities are given, then the Ability System Component's (ASC) `ActivatableAbilities` container
+	 * (i.e. returned by `GetActivatableAbilities()` function) replicates as it is a replicated variable.
+	 * The `OnRep_ActivateAbilities()` is a virtual function that gets called in response to `ActivatableAbilities`
+	 * replicating.
+	 * So after giving abilities, this is going to replicate and also it contains the ability specs of newly given
+	 * abilities. Hence we override `OnRep_ActivateAbilities()` here in our ASC.
+	 *
+	 * Also, we don't want to broadcast `AbilitiesGivenDelegate` everytime this replicates, but we only want to do this
+	 * for the first time we've given abilities. For this, we use `bStartupAbilitiesGiven` and since it's set on server
+	 * and also not replicated, down on the client it will be `false` the first time. So we set it to `true` to avoid
+	 * broadcasting `AbilitiesGivenDelegate` everytime, except for the first time, as the `ActivatableAbilities`
+	 * replicates.
+	 */
+
+	if (!bStartupAbilitiesGiven)
+	{
+		bStartupAbilitiesGiven = true;
+		AbilitiesGivenDelegate.Broadcast(this);
+	}
+}
+
 void UAuraAbilitySystemComponent::ClientEffectApplied_Implementation(
 	UAbilitySystemComponent* AbilitySystemComponent,
 	const FGameplayEffectSpec& EffectSpec,
