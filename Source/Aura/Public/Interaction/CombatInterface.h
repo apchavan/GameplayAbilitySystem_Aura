@@ -50,7 +50,7 @@ public:
 	FVector GetCombatSocketLocation(const FGameplayTag& MontageTag);
 
 	/**
-	 * Function used to rotate the character towards desired target location with Motion Warping.
+	 * Function used to rotate the character towards the desired target location with Motion Warping.
 	 * @param Target Vector location of target to face at.
 	 */
 	UFUNCTION(BlueprintImplementableEvent, BlueprintCallable)
@@ -81,4 +81,7 @@ public:
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
 	void IncrementMinionCount(int32 Amount);
+
+	UFUNCTION(BlueprintNativeEvent, BlueprintCallable)
+	ECharacterClass GetCharacterClass();
 };
