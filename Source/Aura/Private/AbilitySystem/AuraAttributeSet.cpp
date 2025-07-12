@@ -160,6 +160,18 @@ void UAuraAttributeSet::PostGameplayEffectExecute(const FGameplayEffectModCallba
 			const int32 NumLevelUps = NewLevel - CurrentLevel;
 			if (NumLevelUps > 0)
 			{
+				/**
+				 * For each level in our Data Asset ("Content/Blueprints/AbilitySystem/Data/DA_LevelUpInfo.uasset" i.e. based on `ULevelUpInfo`),
+				 * we put the `AttributePointAward` and `SpellPointAward` for leveling up at that level.
+				 *
+				 * That Data Asset is designed in such a way that the reward in it for leveling up from a level
+				 * is the value assigned for that level.
+				 *
+				 * It is better this way because if the max level is 100, and if we had this info in the next level,
+				 * then we'll need to have a placeholder level 101.
+				 * That's why we pass the `CurrentLevel` for getting both the rewards below, and NOT the `NewLevel`.
+				 */
+
 				const int32 AttributePointsReward = IPlayerInterface::Execute_GetAttributePointsReward(Props.SourceCharacter, CurrentLevel);
 				const int32 SpellPointsReward = IPlayerInterface::Execute_GetSpellPointsReward(Props.SourceCharacter, CurrentLevel);
 
