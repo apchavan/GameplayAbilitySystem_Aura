@@ -211,6 +211,14 @@ void UAuraAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
 			 * we force it to replicate right away. So the clients will know the change has occurred.
 			 */
 			MarkAbilitySpecDirty(AbilitySpec);
+
+			/**
+			 * Since the ability just had its status changed, we replicate the chagne to clients via RPC.
+			 *
+			 * So the widget controller can subscribe to that delegate and broadcast the delegate of its own up to the
+			 * widgets which can update themselves.
+			 */
+			ClientUpdateAbilityStatus(Info.AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Eligible);
 		}
 	}
 }
@@ -258,6 +266,11 @@ void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 		bStartupAbilitiesGiven = true;
 		AbilitiesGivenDelegate.Broadcast();
 	}
+}
+
+void UAuraAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag)
+{
+	AbilityStatusChanged.Broadcast(AbilityTag, StatusTag);
 }
 
 void UAuraAbilitySystemComponent::ClientEffectApplied_Implementation(
