@@ -214,12 +214,72 @@ void UAuraAbilitySystemComponent::UpdateAbilityStatuses(int32 Level)
 
 			/**
 			 * Since the ability just had its status changed, we replicate the chagne to clients via RPC.
+			 * The level of this ability is passed as 1, because it was just granted previously for the first time
+			 * with the level 1.
 			 *
-			 * So the widget controller can subscribe to that delegate and broadcast the delegate of its own up to the
-			 * widgets which can update themselves.
+			 * Widget controller subscribes to the related delegate and broadcast their own delegate up to the widgets
+			 * which can update themselves.
 			 */
-			ClientUpdateAbilityStatus(Info.AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Eligible);
+			ClientUpdateAbilityStatus(Info.AbilityTag, FAuraGameplayTags::Get().Abilities_Status_Eligible, 1);
 		}
+	}
+}
+
+void UAuraAbilitySystemComponent::ServerSpendSpellPoint_Implementation(const FGameplayTag& AbilityTag)
+{
+	/**
+	 * Make sure that the Gameplay Ability referred by `AbilityTag` exists within the list of activatable abilities.
+	 */
+	if (FGameplayAbilitySpec* AbilitySpec = GetSpecFromAbilityTag(AbilityTag))
+	{
+		if (GetAvatarActor()->Implements<UPlayerInterface>())
+		{
+			/** Spend a spell point. */
+			IPlayerInterface::Execute_AddToSpellPoints(GetAvatarActor(), -1);
+		}
+
+		const FAuraGameplayTags GameplayTags = FAuraGameplayTags::Get();
+		FGameplayTag Status = GetStatusFromSpec(*AbilitySpec);
+
+		if (Status.MatchesTagExact(GameplayTags.Abilities_Status_Eligible))
+		{
+			/**
+			 * If the status tag is 'Eligible' then after spending a spell point,
+			 * that status should be replaced with 'Unlocked'.
+			 */
+			AbilitySpec->DynamicAbilityTags.RemoveTag(GameplayTags.Abilities_Status_Eligible);
+			AbilitySpec->DynamicAbilityTags.AddTag(GameplayTags.Abilities_Status_Unlocked);
+			Status = GameplayTags.Abilities_Status_Unlocked;
+		}
+		else if (
+			Status.MatchesTagExact(GameplayTags.Abilities_Status_Equipped) ||
+			Status.MatchesTagExact(GameplayTags.Abilities_Status_Unlocked)
+		)
+		{
+			/**
+			 * If the status tag is either 'Equipped' or 'Unlocked' then after spending a spell point,
+			 * the ability should be levelled up.
+			 *
+			 * There are two ways to level up a Gameplay Ability:
+			 *
+			 * [1] One way is to just add 1 to the `AbilitySpec` as,
+			 *		AbilitySpec->Level += 1;
+			 *		// Or
+			 *		AbilitySpec->Level++;
+			 *
+			 *	This results in changing the Gameplay Ability level without cancelling the ability if it's already active.
+			 *	But that already active instance of ability will NOT be able to use this new level of ability unless
+			 *	that ability is re-activated.
+			 *
+			 * [2] When we need to level up the Gameplay Ability by making sure no existing ability instances will use
+			 * the previous level, then we have to remove the ability and give it back.
+			 */
+
+			AbilitySpec->Level += 1;
+		}
+
+		ClientUpdateAbilityStatus(AbilityTag, Status, AbilitySpec->Level);
+		MarkAbilitySpecDirty(*AbilitySpec);
 	}
 }
 
@@ -268,9 +328,12 @@ void UAuraAbilitySystemComponent::OnRep_ActivateAbilities()
 	}
 }
 
-void UAuraAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(const FGameplayTag& AbilityTag, const FGameplayTag& StatusTag)
+void UAuraAbilitySystemComponent::ClientUpdateAbilityStatus_Implementation(
+	const FGameplayTag& AbilityTag,
+	const FGameplayTag& StatusTag,
+	int32 AbilityLevel)
 {
-	AbilityStatusChanged.Broadcast(AbilityTag, StatusTag);
+	AbilityStatusChanged.Broadcast(AbilityTag, StatusTag, AbilityLevel);
 }
 
 void UAuraAbilitySystemComponent::ClientEffectApplied_Implementation(
