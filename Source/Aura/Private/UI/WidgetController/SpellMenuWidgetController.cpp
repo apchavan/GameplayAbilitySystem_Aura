@@ -176,7 +176,7 @@ void USpellMenuWidgetController::OnAbilityEquipped(const FGameplayTag& AbilityTa
 	LastSlotInfo.AbilityTag = GameplayTags.Abilities_None;
 
 	/**
-	 * Broadcast empty info if `PreviousSlot` is a valid slot. Only if equipping an already-equipped spell.
+	 * Broadcast empty info if `PreviousSlot` is a valid slot. Only if equipping an already-equipped spell into a new slot.
 	 */
 	AbilityInfoDelegate.Broadcast(LastSlotInfo);
 
