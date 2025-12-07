@@ -14,7 +14,7 @@ course, "[Unreal Engine 5 - Gameplay Ability System - Top Down RPG](https://www.
 * Visual Studio 2022 IDE —
 
     - Version: `17.11.5`
-    - Microsoft Visual C++ (MSVC): `19.41.34123`
+    - Microsoft Visual C++ (MSVC): `14.41.34123`
 
 ### Notes —
 
