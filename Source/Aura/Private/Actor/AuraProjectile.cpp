@@ -47,7 +47,7 @@ void AAuraProjectile::BeginPlay()
 	 */
 	LoopingSoundComponent = UGameplayStatics::SpawnSoundAttached(LoopingSound, GetRootComponent());
 
-	// Automatically set to stop the sound when this projectile actor is destroyed.
+	/** Automatically set to stop the sound when this projectile actor is destroyed. */
 	if (IsValid(LoopingSoundComponent))
 	{
 		LoopingSoundComponent->bStopWhenOwnerDestroyed = true;
@@ -56,69 +56,57 @@ void AAuraProjectile::BeginPlay()
 
 void AAuraProjectile::Destroyed()
 {
-	// Handle cosmetic effects only if this is running on the client & already NOT hit.
-	if (!bHit && !HasAuthority())
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
-
-		if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
-		{
-			LoopingSoundComponent->Stop();
-		}
-		bHit = true;
-	}
+	/** Handle cosmetic effects only if this is running on the client & already NOT hit. */
+	if (!bHit && !HasAuthority()) OnHit();
 	Super::Destroyed();
 }
 
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (!DamageEffectSpecHandle.Data.IsValid() || DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser() == OtherActor)
-	{
-		/**
-		 * Do not apply damage if,
-		 * the `DamageEffectSpecHandle.Data` is NOT valid
-		 * OR
-		 * both the effect causer and the `OtherActor` are same, i.e. avoid damaging effect causer itself.
-		 */
-		return;
-	}
-	if (!UAuraAbilitySystemLibrary::IsNotFriend(DamageEffectSpecHandle.Data.Get()->GetContext().GetEffectCauser(), OtherActor))
-	{
-		/**
-		 * Do not apply damage if the effect causer and `OtherActor` are from the same team, or they are friends.
-		 * This will avoid damaging between enemy versus enemy and player versus player.
-		 */
-		return;
-	}
+	AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
 
-	// Handle cosmetic effects only if already NOT hit.
-	if (!bHit)
-	{
-		UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
+	/**
+	 * If the `SourceAvatarActor` and the `OtherActor` are the same, then we don't consider it and return.
+	 */
+	if (SourceAvatarActor == OtherActor) return;
 
-		if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
-		{
-			LoopingSoundComponent->Stop();
-		}
-		bHit = true;
-	}
+	/**
+	 * Do not apply damage if the `SourceAvatarActor` and `OtherActor` are from the same team, or they are friends.
+	 * This will avoid damaging between enemy versus enemy and player versus player.
+	 */
+	if (!UAuraAbilitySystemLibrary::IsNotFriend(SourceAvatarActor, OtherActor)) return;
+
+	/** Handle cosmetic effects only if already NOT hit. */
+	if (!bHit) OnHit();
 
 	if (HasAuthority())
 	{
 		if (UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor))
 		{
-			TargetASC->ApplyGameplayEffectSpecToSelf(*DamageEffectSpecHandle.Data.Get());
+			/**
+			 * It is important to set the `TargetAbilitySystemComponent` before applying the damage
+			 * because it may not be set before when creating the `DamageEffectParams`.
+			 */
+			DamageEffectParams.TargetAbilitySystemComponent = TargetASC;
+			UAuraAbilitySystemLibrary::ApplyDamageEffect(DamageEffectParams);
 		}
 
-		// Destroy the object if we're on the server.
+		/** Destroy the object since we're on the server. */
 		Destroy();
 	}
-	else
+	else bHit = true; /** Set this on the client. */
+}
+
+void AAuraProjectile::OnHit()
+{
+	UGameplayStatics::PlaySoundAtLocation(this, ImpactSound, GetActorLocation(), FRotator::ZeroRotator);
+	UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, ImpactEffect, GetActorLocation());
+
+	if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
 	{
-		// Set this on the client.
-		bHit = true;
+		LoopingSoundComponent->Stop();
 	}
+
+	bHit = true;
 }
