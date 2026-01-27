@@ -10,6 +10,7 @@
 #include "GameplayEffectExtension.h"
 #include "AuraGameplayTags.h"
 #include "AbilitySystem/AuraAbilitySystemLibrary.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "Interaction/CombatInterface.h"
 #include "Interaction/PlayerInterface.h"
 #include "Player/AuraPlayerController.h"
@@ -268,6 +269,13 @@ void UAuraAttributeSet::HandleIncomingDamage(const FEffectProperties& Props)
 			FGameplayTagContainer TagContainer;
 			TagContainer.AddTag(FAuraGameplayTags::Get().Abilities_HitReact);
 			Props.TargetASC->TryActivateAbilitiesByTag(TagContainer);
+
+			const FVector& KnockbackForce = UAuraAbilitySystemLibrary::GetKnockbackForce(Props.EffectContextHandle);
+			if (!KnockbackForce.IsNearlyZero(1.0f))
+			{
+				Props.TargetCharacter->GetCharacterMovement()->StopMovementImmediately();
+				Props.TargetCharacter->LaunchCharacter(KnockbackForce, true, true);
+			}
 		}
 
 		const bool bBlock = UAuraAbilitySystemLibrary::IsBlockedHit(Props.EffectContextHandle);
