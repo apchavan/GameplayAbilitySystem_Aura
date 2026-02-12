@@ -8,6 +8,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "NavigationPath.h"
 #include "NavigationSystem.h"
+#include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/Character.h"
@@ -175,6 +176,12 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 					// Set the auto-running since we have navigation points ready.
 					bAutoRunning = true;
+
+					UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+						this,
+						ClickNiagaraSystem,
+						CachedDestination
+					);
 				}
 			}
 		}
