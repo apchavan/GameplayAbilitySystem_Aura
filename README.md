@@ -13,7 +13,7 @@ course, "[Unreal Engine 5 - Gameplay Ability System - Top Down RPG](https://www.
 
 * Visual Studio 2022 —
 
-    - IDE Version: `17.14.25`
+    - IDE Version: `17.14.26`
     - Microsoft Visual C++ (MSVC Compiler): `14.41.z`
 
 ### Notes —
@@ -21,7 +21,7 @@ course, "[Unreal Engine 5 - Gameplay Ability System - Top Down RPG](https://www.
 1. Due to size limitation of GitHub repositories, this project does not include any assets provided by Udemy course.
 2. Commit messages are mostly the course lecture titles, except some of them are for important fixes or updating
    this [README.md](./README.md) file.
-3. Since the Unreal Engine's version is `5.2.1-26001984`, and the version used for Visual Studio 2022 IDE is `17.14.25`,
+3. Since the Unreal Engine's version is `5.2.1-26001984`, and the version used for Visual Studio 2022 IDE is `17.14.26`,
    the MSVC compiler must have version starting with `14.41.z`. This is to avoid compilation issues encountered by
    later updated versions of MSVC compiler.
 4. It may be possible to use the latest version of Visual Studio 2022 compilers but installing the necessary tools like
