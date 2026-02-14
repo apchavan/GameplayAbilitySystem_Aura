@@ -56,6 +56,19 @@ void AAuraProjectile::BeginPlay()
 
 void AAuraProjectile::Destroyed()
 {
+	/**
+	 * If the projectile gets destroyed due to its lifespan expiry without hitting anything,
+	 * then we ensure that the `LoopingSoundComponent` stops and gets destroyed.
+	 * 
+	 * This may not be needed because we already set the `bStopWhenOwnerDestroyed` to `true` after spawning,
+	 * but just to be safe we do it again.
+	 */
+	if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
+	{
+		LoopingSoundComponent->Stop();
+		LoopingSoundComponent->DestroyComponent();
+	}
+
 	/** Handle cosmetic effects only if this is running on the client & already NOT hit. */
 	if (!bHit && !HasAuthority()) OnHit();
 	Super::Destroyed();
@@ -125,6 +138,7 @@ void AAuraProjectile::OnHit()
 	if (IsValid(LoopingSoundComponent) && LoopingSoundComponent->IsPlaying())
 	{
 		LoopingSoundComponent->Stop();
+		LoopingSoundComponent->DestroyComponent();
 	}
 
 	bHit = true;

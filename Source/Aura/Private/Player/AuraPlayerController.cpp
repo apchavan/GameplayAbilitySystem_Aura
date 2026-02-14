@@ -138,6 +138,7 @@ void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 		// If it is short press, then we can auto-run but here we don't know yet until we release this LMB input.
 		bAutoRunning = false;
 	}
+	if (GetASC()) GetASC()->AbilityInputTagPressed(InputTag);
 }
 
 void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
