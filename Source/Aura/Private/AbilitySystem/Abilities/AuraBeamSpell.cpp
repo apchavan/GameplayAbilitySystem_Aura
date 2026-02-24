@@ -31,9 +31,9 @@ void UAuraBeamSpell::StoreMouseDataInfo(const FHitResult& HitResult)
 		*/
 
 		EndAbility(
-			GetCurrentAbilitySpecHandle(),
-			GetCurrentActorInfo(),
-			GetCurrentActivationInfo(),
+			CurrentSpecHandle,
+			CurrentActorInfo,
+			CurrentActivationInfo,
 			true,
 			false
 		);
@@ -42,8 +42,8 @@ void UAuraBeamSpell::StoreMouseDataInfo(const FHitResult& HitResult)
 
 void UAuraBeamSpell::StoreOwnerPlayerController()
 {
-	if (GetCurrentActorInfo())
+	if (CurrentActorInfo)
 	{
-		OwnerPlayerController = GetCurrentActorInfo()->PlayerController.Get();
+		OwnerPlayerController = CurrentActorInfo->PlayerController.Get();
 	}
 }
