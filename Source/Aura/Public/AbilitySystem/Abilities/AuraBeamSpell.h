@@ -20,7 +20,7 @@ public:
 	void StoreMouseDataInfo(const FHitResult& HitResult);
 
 	UFUNCTION(BlueprintCallable)
-	void StoreOwnerPlayerController();
+	void StoreOwnerVariables();
 
 protected:
 
@@ -32,4 +32,7 @@ protected:
 
 	UPROPERTY(BlueprintReadWrite, Category = "Beam")
 	TObjectPtr<APlayerController> OwnerPlayerController;
+
+	UPROPERTY(BlueprintReadWrite, Category = "Beam")
+	TObjectPtr<ACharacter> OwnerCharacter;
 };
