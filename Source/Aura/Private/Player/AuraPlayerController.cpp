@@ -93,6 +93,11 @@ void AAuraPlayerController::SetupInputComponent()
 
 void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+	{
+		return;
+	}
+
 	const FVector2D InputAxisVector = InputActionValue.Get<FVector2D>();
 	const FRotator Rotation = GetControlRotation();
 	const FRotator YawRotation(0.f, Rotation.Yaw, 0.f);
@@ -109,6 +114,15 @@ void AAuraPlayerController::Move(const FInputActionValue& InputActionValue)
 
 void AAuraPlayerController::CursorTrace()
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_CursorTrace))
+	{
+		if (LastActor) LastActor->UnHighlightActor();
+		if (ThisActor) ThisActor->UnHighlightActor();
+		LastActor = nullptr;
+		ThisActor = nullptr;
+		return;
+	}
+
 	// Detect the actor under cursor.
 	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
 
@@ -128,6 +142,11 @@ void AAuraPlayerController::CursorTrace()
 
 void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+	{
+		return;
+	}
+
 	// Check whether the `InputTag` pressed is LMB, because it can either move character or activate the ability.
 	if (InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
 	{
@@ -143,6 +162,11 @@ void AAuraPlayerController::AbilityInputTagPressed(FGameplayTag InputTag)
 
 void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputReleased))
+	{
+		return;
+	}
+
 	if (!InputTag.MatchesTagExact(FAuraGameplayTags::Get().InputTag_LMB))
 	{
 		if (GetASC()) GetASC()->AbilityInputTagReleased(InputTag);
@@ -178,11 +202,15 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 					// Set the auto-running since we have navigation points ready.
 					bAutoRunning = true;
 
-					UNiagaraFunctionLibrary::SpawnSystemAtLocation(
-						this,
-						ClickNiagaraSystem,
-						CachedDestination
-					);
+					// Only play the Niagara system if we are NOT blocking the input pressed.
+					if (GetASC() && !GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+					{
+						UNiagaraFunctionLibrary::SpawnSystemAtLocation(
+							this,
+							ClickNiagaraSystem,
+							CachedDestination
+						);
+					}
 				}
 			}
 		}
@@ -197,6 +225,11 @@ void AAuraPlayerController::AbilityInputTagReleased(FGameplayTag InputTag)
 
 void AAuraPlayerController::AbilityInputTagHeld(FGameplayTag InputTag)
 {
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputHeld))
+	{
+		return;
+	}
+
 	// If the `InputTag` is NOT the LMB input, we can try to activate the ability.
 	// Because here we don't auto-run or move character.
 	// Except the LMB input, all other held inputs will be managed here to activate their related abilities.
@@ -248,6 +281,16 @@ UAuraAbilitySystemComponent* AAuraPlayerController::GetASC()
 void AAuraPlayerController::AutoRun()
 {
 	if (!bAutoRunning) return;
+
+	/**
+	 * If blocking the player input pressed, then reset the `bAutoRunning` to avoid auto-running
+	 * after un-blocking that player input pressed.
+	 */
+	if (GetASC() && GetASC()->HasMatchingGameplayTag(FAuraGameplayTags::Get().Player_Block_InputPressed))
+	{
+		bAutoRunning = false;
+		return;
+	}
 
 	if (APawn* ControlledPawn = GetPawn<APawn>())
 	{
