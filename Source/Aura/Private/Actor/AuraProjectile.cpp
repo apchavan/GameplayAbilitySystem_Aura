@@ -37,6 +37,9 @@ void AAuraProjectile::BeginPlay()
 {
 	Super::BeginPlay();
 
+	/** To correct the projectile movement on client side. */
+	SetReplicateMovement(true);
+
 	SetLifeSpan(LifeSpan);
 
 	Sphere->OnComponentBeginOverlap.AddDynamic(this, &AAuraProjectile::OnSphereOverlap);
@@ -77,6 +80,9 @@ void AAuraProjectile::Destroyed()
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
+	/** To prevent the access violation error on client side. */
+	if (!IsValid(DamageEffectParams.SourceAbilitySystemComponent)) return;
+
 	AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
 
 	/**
