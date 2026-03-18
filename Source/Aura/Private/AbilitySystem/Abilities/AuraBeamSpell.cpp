@@ -108,6 +108,21 @@ void UAuraBeamSpell::StoreAdditionalTargets(TArray<AActor*>& OutAdditionalTarget
 	// int32 NumAdditionalTargets = FMath::Min(GetAbilityLevel() - 1, MaxNumShockTargets);
 	int32 NumAdditionalTargets = 5;
 
+	/** Remove the other players if there are any in `OverlappingActors`. */
+	for (int32 Index = OverlappingActors.Num() - 1; Index >= 0; --Index)
+	{
+		/**
+		 * If the 'Overlapping Actor' and the ability's 'Avatar Actor' are NOT friends then it means they're enemies.
+		 * But since we want to check whether they both are friends, we again NEGATE that result to know whether they're friends.
+		 *
+		 * This is mainly to show the beam targeted only towards the enemies and not the other players.
+		 */
+		if (!UAuraAbilitySystemLibrary::IsNotFriend(OverlappingActors[Index], GetAvatarActorFromActorInfo()))
+		{
+			OverlappingActors.RemoveAt(Index);
+		}
+	}
+
 	UAuraAbilitySystemLibrary::GetClosestTargets(
 		NumAdditionalTargets,
 		OverlappingActors,
