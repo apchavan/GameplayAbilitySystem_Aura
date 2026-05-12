@@ -20,6 +20,8 @@ public:
 
 	AAuraProjectile();
 
+	virtual void Destroyed() override;
+
 	UPROPERTY(VisibleAnywhere)
 	TObjectPtr<UProjectileMovementComponent> ProjectileMovement;
 
@@ -32,7 +34,6 @@ public:
 protected:
 
 	virtual void BeginPlay() override;
-	virtual void Destroyed() override;
 
 	UFUNCTION()
 	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
