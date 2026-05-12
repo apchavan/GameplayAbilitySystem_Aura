@@ -32,6 +32,54 @@ AAuraEnemy::AAuraEnemy()
 
 	HealthBar = CreateDefaultSubobject<UWidgetComponent>("HealthBar");
 	HealthBar->SetupAttachment(GetRootComponent());
+
+	BaseWalkSpeed = 250.0f;
+}
+
+void AAuraEnemy::BeginPlay()
+{
+	Super::BeginPlay();
+
+	InitAbilityActorInfo();
+
+	if (HasAuthority())
+	{
+		UAuraAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
+	}
+
+	// 1. Set the Progress Bar's widget controller which is used by `HealthBar` widget component. 
+	if (UAuraUserWidget* AuraUserWidget = Cast<UAuraUserWidget>(HealthBar->GetUserWidgetObject()))
+	{
+		AuraUserWidget->SetWidgetController(this);
+	}
+
+	if (const UAuraAttributeSet* AuraAS = Cast<UAuraAttributeSet>(AttributeSet))
+	{
+		// 2. Bind callback lambdas for value change to both health attributes on the Ability System Component.
+
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAS->GetHealthAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				OnHealthChanged.Broadcast(Data.NewValue);
+			}
+		);
+		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAS->GetMaxHealthAttribute()).AddLambda(
+			[this](const FOnAttributeChangeData& Data)
+			{
+				OnMaxHealthChanged.Broadcast(Data.NewValue);
+			}
+		);
+
+		// Bind callback to identify when the "Effects.HitReact" Gameplay Tag was newly added to or removed from the Ability System Component.
+		AbilitySystemComponent->RegisterGameplayTagEvent(
+			FAuraGameplayTags::Get().Effects_HitReact,
+			EGameplayTagEventType::NewOrRemoved
+		).AddUObject(this, &AAuraEnemy::HitReactTagChanged);
+
+		// 3. Broadcast the initial values.
+		OnHealthChanged.Broadcast(AuraAS->GetHealth());
+		OnMaxHealthChanged.Broadcast(AuraAS->GetMaxHealth());
+	}
 }
 
 void AAuraEnemy::PossessedBy(AController* NewController)
@@ -123,58 +171,15 @@ void AAuraEnemy::HitReactTagChanged(const FGameplayTag CallbackTag, int32 NewCou
 	}
 }
 
-void AAuraEnemy::BeginPlay()
-{
-	Super::BeginPlay();
-
-	GetCharacterMovement()->MaxWalkSpeed = BaseWalkSpeed;
-
-	InitAbilityActorInfo();
-
-	if (HasAuthority())
-	{
-		UAuraAbilitySystemLibrary::GiveStartupAbilities(this, AbilitySystemComponent, CharacterClass);
-	}
-
-	// 1. Set the Progress Bar's widget controller which is used by `HealthBar` widget component. 
-	if (UAuraUserWidget* AuraUserWidget = Cast<UAuraUserWidget>(HealthBar->GetUserWidgetObject()))
-	{
-		AuraUserWidget->SetWidgetController(this);
-	}
-
-	if (const UAuraAttributeSet* AuraAS = Cast<UAuraAttributeSet>(AttributeSet))
-	{
-		// 2. Bind callback lambdas for value change to both health attributes on the Ability System Component.
-
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAS->GetHealthAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnHealthChanged.Broadcast(Data.NewValue);
-			}
-		);
-		AbilitySystemComponent->GetGameplayAttributeValueChangeDelegate(AuraAS->GetMaxHealthAttribute()).AddLambda(
-			[this](const FOnAttributeChangeData& Data)
-			{
-				OnMaxHealthChanged.Broadcast(Data.NewValue);
-			}
-		);
-
-		// Bind callback to identify when the "Effects.HitReact" Gameplay Tag was newly added to or removed from the Ability System Component.
-		AbilitySystemComponent->RegisterGameplayTagEvent(
-			FAuraGameplayTags::Get().Effects_HitReact,
-			EGameplayTagEventType::NewOrRemoved
-		).AddUObject(this, &AAuraEnemy::HitReactTagChanged);
-
-		// 3. Broadcast the initial values.
-		OnHealthChanged.Broadcast(AuraAS->GetHealth());
-		OnMaxHealthChanged.Broadcast(AuraAS->GetMaxHealth());
-	}
-}
-
 void AAuraEnemy::InitAbilityActorInfo()
 {
 	AbilitySystemComponent->InitAbilityActorInfo(this, this);
 	Cast<UAuraAbilitySystemComponent>(AbilitySystemComponent)->AbilityActorInfoSet();
+
+	AbilitySystemComponent->RegisterGameplayTagEvent(
+		FAuraGameplayTags::Get().Debuff_Stun,
+		EGameplayTagEventType::NewOrRemoved
+	).AddUObject(this, &AAuraEnemy::StunTagChanged);
 
 	if (HasAuthority())
 	{
@@ -191,4 +196,14 @@ void AAuraEnemy::InitializeDefaultAttributes() const
 	 * we call the static method from `UAuraAbilitySystemLibrary` class.
 	 */
 	UAuraAbilitySystemLibrary::InitializeDefaultAttributes(this, CharacterClass, Level, AbilitySystemComponent);
+}
+
+void AAuraEnemy::StunTagChanged(const FGameplayTag CallbackTag, int32 NewCount)
+{
+	Super::StunTagChanged(CallbackTag, NewCount);
+
+	if (AuraAIController && AuraAIController->GetBlackboardComponent())
+	{
+		AuraAIController->GetBlackboardComponent()->SetValueAsBool(FName("Stunned"), bIsStunned);
+	}
 }
