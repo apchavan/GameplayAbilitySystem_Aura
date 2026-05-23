@@ -19,12 +19,12 @@ public:
 
 	UDebuffNiagaraComponent();
 
+	virtual void BeginPlay() override;
+
 	UPROPERTY(VisibleAnywhere)
 	FGameplayTag DebuffTag;
 
 protected:
-
-	virtual void BeginPlay() override;
 
 	void DebuffTagChanged(const FGameplayTag CallbackTag, int32 NewCount);
 
