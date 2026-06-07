@@ -48,7 +48,11 @@ void AAuraPlayerController::ShowMagicCircle()
 {
 	if (!IsValid(MagicCircle))
 	{
-		MagicCircle = GetWorld()->SpawnActor<AMagicCircle>(MagicCircleClass);
+		MagicCircle = GetWorld()->SpawnActor<AMagicCircle>(
+			MagicCircleClass,
+			CursorHit.ImpactPoint,
+			FRotator::ZeroRotator
+		);
 	}
 }
 
