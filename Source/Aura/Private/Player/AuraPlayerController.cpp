@@ -11,6 +11,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "Actor/MagicCircle.h"
+#include "Components/DecalComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/Character.h"
 #include "Input/AuraInputComponent.h"
@@ -44,7 +45,7 @@ void AAuraPlayerController::ShowDamageNumber_Implementation(float DamageAmount, 
 	}
 }
 
-void AAuraPlayerController::ShowMagicCircle()
+void AAuraPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
 {
 	if (!IsValid(MagicCircle))
 	{
@@ -53,6 +54,17 @@ void AAuraPlayerController::ShowMagicCircle()
 			CursorHit.ImpactPoint,
 			FRotator::ZeroRotator
 		);
+
+		if (DecalMaterial)
+		{
+			MagicCircle->MagicCircleDecal->SetDecalMaterial(DecalMaterial);
+
+			/**
+			 * Or we can write the same code as,
+			 * 
+			 * MagicCircle->MagicCircleDecal->SetMaterial(0, DecalMaterial);
+			 */
+		}
 	}
 }
 
