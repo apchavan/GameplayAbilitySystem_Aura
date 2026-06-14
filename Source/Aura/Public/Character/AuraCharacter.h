@@ -7,6 +7,7 @@
 #include "Interaction/PlayerInterface.h"
 #include "AuraCharacter.generated.h"
 
+class AAuraPlayerController;
 class USpringArmComponent;
 class UCameraComponent;
 class UNiagaraComponent;
@@ -68,4 +69,20 @@ protected:
 
 	UFUNCTION(NetMulticast, Reliable)
 	void MulticastLevelUpParticles() const;
+
+private:
+
+	/**
+	 * Helper function to correctly show or hide the mouse cursor.
+	 * 
+	 * Forces the mouse cursor to refresh by setting the position to itself.
+	 * This is useful and required to correctly handle showing or hiding.
+	 * 
+	 * @param AuraPlayerController The pointer to Aura's Player Controller.
+	 * @param bShowMouseCursor The boolean to show or hide the mouse cursor.
+	 */
+	static void ToggleRefreshMouseCursor(
+		AAuraPlayerController* AuraPlayerController,
+		const bool bShowMouseCursor = true
+	);
 };

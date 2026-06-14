@@ -11,6 +11,7 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Player/AuraPlayerController.h"
 #include "Player/AuraPlayerState.h"
 #include "UI/HUD/AuraHUD.h"
@@ -164,6 +165,7 @@ void AAuraCharacter::ShowMagicCircle_Implementation(UMaterialInterface* DecalMat
 	if (AAuraPlayerController* AuraPlayerController = Cast<AAuraPlayerController>(GetController()))
 	{
 		AuraPlayerController->ShowMagicCircle(DecalMaterial);
+		ToggleRefreshMouseCursor(AuraPlayerController, false);
 	}
 }
 
@@ -172,6 +174,7 @@ void AAuraCharacter::HideMagicCircle_Implementation()
 	if (AAuraPlayerController* AuraPlayerController = Cast<AAuraPlayerController>(GetController()))
 	{
 		AuraPlayerController->HideMagicCircle();
+		ToggleRefreshMouseCursor(AuraPlayerController, true);
 	}
 }
 
@@ -246,4 +249,28 @@ void AAuraCharacter::InitAbilityActorInfo()
 	}
 	// Initialize default attributes by applying the Gameplay Effects configured in Blueprints.
 	InitializeDefaultAttributes();
+}
+
+void AAuraCharacter::ToggleRefreshMouseCursor(
+	AAuraPlayerController* AuraPlayerController,
+	const bool bShowMouseCursor
+)
+{
+	if (!IsValid(AuraPlayerController))
+	{
+		return;
+	}
+
+	if (
+		float MouseLocationX = 0.0f, MouseLocationY = 0.0f;
+		AuraPlayerController->GetMousePosition(MouseLocationX, MouseLocationY)
+	)
+	{
+		AuraPlayerController->bShowMouseCursor = bShowMouseCursor;
+
+		AuraPlayerController->SetMouseLocation(
+			UKismetMathLibrary::FTrunc(MouseLocationX),
+			UKismetMathLibrary::FTrunc(MouseLocationY)
+		);
+	}
 }
