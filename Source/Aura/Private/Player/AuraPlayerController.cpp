@@ -11,6 +11,7 @@
 #include "NiagaraFunctionLibrary.h"
 #include "AbilitySystem/AuraAbilitySystemComponent.h"
 #include "Actor/MagicCircle.h"
+#include "Aura/Aura.h"
 #include "Components/DecalComponent.h"
 #include "Components/SplineComponent.h"
 #include "GameFramework/Character.h"
@@ -157,8 +158,10 @@ void AAuraPlayerController::CursorTrace()
 		return;
 	}
 
+	const ECollisionChannel TraceChannel = IsValid(MagicCircle) ? ECC_ExcludePlayers : ECC_Visibility;
+
 	// Detect the actor under cursor.
-	GetHitResultUnderCursor(ECC_Visibility, false, CursorHit);
+	GetHitResultUnderCursor(TraceChannel, false, CursorHit);
 
 	// Return early if there's no blocking hit detected.
 	if (!CursorHit.bBlockingHit) return;
