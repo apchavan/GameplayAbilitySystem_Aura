@@ -4,6 +4,8 @@
 #include "Actor/MagicCircle.h"
 
 #include "Components/DecalComponent.h"
+#include "Components/SphereComponent.h"
+#include "Interaction/EnemyInterface.h"
 
 
 AMagicCircle::AMagicCircle()
@@ -21,6 +23,11 @@ AMagicCircle::AMagicCircle()
 	 */
 	SetRootComponent(CreateDefaultSubobject<USceneComponent>("RootSceneComponent"));
 
+	TargetsHighlightSphere = CreateDefaultSubobject<USphereComponent>("TargetsHighlightSphere");
+	TargetsHighlightSphere->SetupAttachment(GetRootComponent());
+	TargetsHighlightSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+	TargetsHighlightSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+
 	MagicCircleDecal = CreateDefaultSubobject<UDecalComponent>("MagicCircleDecal");
 	MagicCircleDecal->SetupAttachment(GetRootComponent());
 }
@@ -30,7 +37,36 @@ void AMagicCircle::Tick(float DeltaTime)
 	Super::Tick(DeltaTime);
 }
 
+void AMagicCircle::SetHighlightSphereRadiusAndDecalSize(const float InRadiusSize) const
+{
+	if (InRadiusSize > 0.0f)
+	{
+		TargetsHighlightSphere->SetSphereRadius(InRadiusSize);
+		MagicCircleDecal->DecalSize = FVector(InRadiusSize);
+	}
+}
+
 void AMagicCircle::BeginPlay()
 {
 	Super::BeginPlay();
+
+	TargetsHighlightSphere->OnComponentBeginOverlap.AddDynamic(this, &AMagicCircle::OnTargetsHighlightSphereBeginOverlap);
+	TargetsHighlightSphere->OnComponentEndOverlap.AddDynamic(this, &AMagicCircle::OnTargetsHighlightSphereEndOverlap);
+}
+
+void AMagicCircle::OnTargetsHighlightSphereBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if (IsValid(OtherActor); IEnemyInterface* EnemyInterface = Cast<IEnemyInterface>(OtherActor))
+	{
+		EnemyInterface->HighlightActor();
+	}
+}
+
+void AMagicCircle::OnTargetsHighlightSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
+{
+	if (IsValid(OtherActor); IEnemyInterface* EnemyInterface = Cast<IEnemyInterface>(OtherActor))
+	{
+		EnemyInterface->UnHighlightActor();
+	}
 }

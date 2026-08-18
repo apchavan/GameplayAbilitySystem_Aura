@@ -46,7 +46,7 @@ void AAuraPlayerController::ShowDamageNumber_Implementation(float DamageAmount, 
 	}
 }
 
-void AAuraPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
+void AAuraPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial, const float InRadiusSize)
 {
 	if (!IsValid(MagicCircle))
 	{
@@ -55,6 +55,11 @@ void AAuraPlayerController::ShowMagicCircle(UMaterialInterface* DecalMaterial)
 			CursorHit.ImpactPoint,
 			FRotator::ZeroRotator
 		);
+
+		if (InRadiusSize > 0.0f)
+		{
+			MagicCircle->SetHighlightSphereRadiusAndDecalSize(InRadiusSize);
+		}
 
 		if (DecalMaterial)
 		{
