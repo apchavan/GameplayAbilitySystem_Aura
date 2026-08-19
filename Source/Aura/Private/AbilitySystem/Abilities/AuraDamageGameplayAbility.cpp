@@ -20,7 +20,9 @@ void UAuraDamageGameplayAbility::CauseDamage(AActor* TargetActor)
 }
 
 FDamageEffectParams UAuraDamageGameplayAbility::MakeDamageEffectParamsFromClassDefaults(
-	AActor* TargetActor, const FVector InRadialDamageOrigin
+	AActor* TargetActor, const FVector InRadialDamageOrigin, bool bOverrideKnockbackDirection,
+	FVector KnockbackDirectionOverride, bool bOverrideDeathImpulseDirection, FVector DeathImpulseDirectionOverride,
+	bool bOverridePitch, float PitchOverride
 ) const
 {
 	FDamageEffectParams Params;
@@ -43,16 +45,64 @@ FDamageEffectParams UAuraDamageGameplayAbility::MakeDamageEffectParamsFromClassD
 	if (IsValid(TargetActor))
 	{
 		FRotator Rotation = (TargetActor->GetActorLocation() - GetAvatarActorFromActorInfo()->GetActorLocation()).Rotation();
-		Rotation.Pitch = 45.0f;
-		const FVector ToTarget = Rotation.Vector();
-		Params.DeathImpulse = ToTarget * DeathImpulseMagnitude;
-
-		const bool bKnockback = FMath::RandRange(1, 100) < Params.KnockbackChance;
-		if (bKnockback)
+		if (bOverridePitch)
 		{
-			Params.KnockbackForce = ToTarget * KnockbackForceMagnitude;
+			Rotation.Pitch = PitchOverride;
+		}
+
+		const FVector ToTarget = Rotation.Vector();
+
+		if (!bOverrideKnockbackDirection)
+		{
+			// Apply `KnockbackForce` only if the `KnockbackChance` is valid.
+			if (FMath::RandRange(1, 100) < Params.KnockbackChance)
+			{
+				Params.KnockbackForce = ToTarget * KnockbackForceMagnitude;
+			}
+		}
+
+		if (!bOverrideDeathImpulseDirection)
+		{
+			Params.DeathImpulse = ToTarget * DeathImpulseMagnitude;
 		}
 	}
+
+	if (bOverrideKnockbackDirection)
+	{
+		KnockbackDirectionOverride.Normalize();
+
+		// Apply `KnockbackForce` only if the `KnockbackChance` is valid.
+		if (FMath::RandRange(1, 100) < Params.KnockbackChance)
+		{
+			Params.KnockbackForce = KnockbackDirectionOverride * KnockbackForceMagnitude;
+		}
+
+		if (bOverridePitch)
+		{
+			FRotator KnockbackRotation = KnockbackDirectionOverride.Rotation();
+			KnockbackRotation.Pitch = PitchOverride;
+
+			// Apply `KnockbackForce` only if the `KnockbackChance` is valid.
+			if (FMath::RandRange(1, 100) < Params.KnockbackChance)
+			{
+				Params.KnockbackForce = KnockbackRotation.Vector() * KnockbackForceMagnitude;
+			}
+		}
+	}
+
+	if (bOverrideDeathImpulseDirection)
+	{
+		DeathImpulseDirectionOverride.Normalize();
+		Params.DeathImpulse = DeathImpulseDirectionOverride * DeathImpulseMagnitude;
+
+		if (bOverridePitch)
+		{
+			FRotator DeathImpulseRotation = DeathImpulseDirectionOverride.Rotation();
+			DeathImpulseRotation.Pitch = PitchOverride;
+			Params.DeathImpulse = DeathImpulseRotation.Vector() * DeathImpulseMagnitude;
+		}
+	}
+
 	if (bIsRadialDamage)
 	{
 		Params.bIsRadialDamage = bIsRadialDamage;
