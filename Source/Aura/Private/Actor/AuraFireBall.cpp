@@ -3,6 +3,17 @@
 
 #include "Actor/AuraFireBall.h"
 
+#include "GameFramework/ProjectileMovementComponent.h"
+
+AAuraFireBall::AAuraFireBall()
+{
+	ProjectileMovement->PrimaryComponentTick.bCanEverTick = false;
+	ProjectileMovement->PrimaryComponentTick.bStartWithTickEnabled = false;
+	ProjectileMovement->SetAutoActivate(false);
+	ProjectileMovement->InitialSpeed = 0.0f;
+	ProjectileMovement->MaxSpeed = 0.0f;
+}
+
 void AAuraFireBall::BeginPlay()
 {
 	Super::BeginPlay();

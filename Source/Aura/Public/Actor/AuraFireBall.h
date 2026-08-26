@@ -16,6 +16,8 @@ class AURA_API AAuraFireBall : public AAuraProjectile
 
 public:
 
+	AAuraFireBall();
+
 protected:
 
 	virtual void BeginPlay() override;
