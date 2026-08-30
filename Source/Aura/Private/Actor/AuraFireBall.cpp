@@ -7,13 +7,18 @@
 
 AAuraFireBall::AAuraFireBall()
 {
-	ProjectileMovement->InitialSpeed = 1600.0f;
-	ProjectileMovement->MaxSpeed = 1600.0f;
+	ProjectileMovement->PrimaryComponentTick.bCanEverTick = false;
+	ProjectileMovement->PrimaryComponentTick.bStartWithTickEnabled = false;
+	ProjectileMovement->SetAutoActivate(false);
+	ProjectileMovement->InitialSpeed = 0.0f;
+	ProjectileMovement->MaxSpeed = 0.0f;
 }
 
 void AAuraFireBall::BeginPlay()
 {
 	Super::BeginPlay();
+
+	StartOutgoingTimeline();
 }
 
 void AAuraFireBall::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
