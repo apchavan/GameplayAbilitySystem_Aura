@@ -41,10 +41,11 @@ protected:
 	UFUNCTION(BlueprintCallable)
 	void OnHit();
 
+	bool IsValidOverlap(AActor* OtherActor) const;
+
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly)
 	TObjectPtr<USphereComponent> Sphere;
 
-private:
 	/**
 	 * On the client, either `OnSphereOverlap()` function will be called first or the act of destruction (with `Destroyed()`)
 	 * will replicate down to client will happen first.
@@ -63,6 +64,8 @@ private:
 	 * if not, we can play them.
 	 */
 	bool bHit = false;
+
+private:
 
 	UPROPERTY(EditAnywhere)
 	TObjectPtr<UNiagaraSystem> ImpactEffect;

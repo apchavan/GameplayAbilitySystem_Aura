@@ -81,21 +81,7 @@ void AAuraProjectile::BeginPlay()
 void AAuraProjectile::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
                                       UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	/** To prevent the access violation error on client side. */
-	if (!IsValid(DamageEffectParams.SourceAbilitySystemComponent)) return;
-
-	AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
-
-	/**
-	 * If the `SourceAvatarActor` and the `OtherActor` are the same, then we don't consider it and return.
-	 */
-	if (SourceAvatarActor == OtherActor) return;
-
-	/**
-	 * Do not apply damage if the `SourceAvatarActor` and `OtherActor` are from the same team, or they are friends.
-	 * This will avoid damaging between enemy versus enemy and player versus player.
-	 */
-	if (!UAuraAbilitySystemLibrary::IsNotFriend(SourceAvatarActor, OtherActor)) return;
+	if (!IsValidOverlap(OtherActor)) return;
 
 	/** Handle cosmetic effects only if already NOT hit. */
 	if (!bHit) OnHit();
@@ -149,4 +135,25 @@ void AAuraProjectile::OnHit()
 	}
 
 	bHit = true;
+}
+
+bool AAuraProjectile::IsValidOverlap(AActor* OtherActor) const
+{
+	/** To prevent the access violation error on client side. */
+	if (!IsValid(DamageEffectParams.SourceAbilitySystemComponent)) return false;
+
+	AActor* SourceAvatarActor = DamageEffectParams.SourceAbilitySystemComponent->GetAvatarActor();
+
+	/**
+	 * If the `SourceAvatarActor` and the `OtherActor` are the same, then we don't consider it and return.
+	 */
+	if (SourceAvatarActor == OtherActor) return false;
+
+	/**
+	 * Do not apply damage if the `SourceAvatarActor` and `OtherActor` are from the same team, or they are friends.
+	 * This will avoid damaging between enemy versus enemy and player versus player.
+	 */
+	if (!UAuraAbilitySystemLibrary::IsNotFriend(SourceAvatarActor, OtherActor)) return false;
+
+	return true;
 }
