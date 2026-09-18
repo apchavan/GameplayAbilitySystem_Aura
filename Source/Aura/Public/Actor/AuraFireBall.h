@@ -24,6 +24,9 @@ public:
 	UPROPERTY(BlueprintReadOnly)
 	TObjectPtr<AActor> ReturnToActor;
 
+	UPROPERTY(BlueprintReadWrite)
+	FDamageEffectParams ExplosionDamageParams;
+
 protected:
 
 	virtual void BeginPlay() override;
