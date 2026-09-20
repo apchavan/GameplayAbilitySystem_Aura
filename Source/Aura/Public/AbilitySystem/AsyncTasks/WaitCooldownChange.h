@@ -45,4 +45,8 @@ protected:
 	void CooldownTagChanged(const FGameplayTag InCooldownTag, int32 NewCount);
 
 	void OnActiveEffectAdded(UAbilitySystemComponent* TargetASC, const FGameplayEffectSpec& SpecApplied, FActiveGameplayEffectHandle ActiveEffectHandle);
+
+	/** Check for leftover cooldown this ability input had before. */
+	UFUNCTION(BlueprintCallable)
+	void CheckRemainingCooldownTime() const;
 };

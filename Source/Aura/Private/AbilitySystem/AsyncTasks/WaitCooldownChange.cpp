@@ -59,12 +59,16 @@ void UWaitCooldownChange::OnActiveEffectAdded(UAbilitySystemComponent* TargetASC
 
 	if (AssetTags.HasTagExact(CooldownTag) || GrantedTags.HasTagExact(CooldownTag))
 	{
-		FGameplayEffectQuery GameplayEffectQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(CooldownTag.GetSingleTagContainer());
+		const FGameplayEffectQuery GameplayEffectQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(
+			CooldownTag.GetSingleTagContainer()
+		);
 		TArray<float> TimesRemaining = ASC->GetActiveEffectsTimeRemaining(GameplayEffectQuery);
 
 		if (TimesRemaining.Num() > 0)
 		{
 			float TimeRemaining = TimesRemaining[0];
+
+			// Find the maximum cooldown remaining time.
 			for (int32 i = 0; i < TimesRemaining.Num(); i++)
 			{
 				if (TimesRemaining[i] > TimeRemaining)
@@ -75,5 +79,31 @@ void UWaitCooldownChange::OnActiveEffectAdded(UAbilitySystemComponent* TargetASC
 
 			CooldownStart.Broadcast(TimeRemaining);
 		}
+	}
+}
+
+void UWaitCooldownChange::CheckRemainingCooldownTime() const
+{
+	if (!IsValid(ASC) || !CooldownTag.IsValid()) return;
+
+	const FGameplayEffectQuery GameplayEffectQuery = FGameplayEffectQuery::MakeQuery_MatchAnyOwningTags(
+		CooldownTag.GetSingleTagContainer()
+	);
+	TArray<float> TimesRemaining = ASC->GetActiveEffectsTimeRemaining(GameplayEffectQuery);
+
+	if (TimesRemaining.Num() > 0)
+	{
+		float TimeRemaining = TimesRemaining[0];
+
+		// Find the maximum cooldown remaining time.
+		for (int32 i = 0; i < TimesRemaining.Num(); i++)
+		{
+			if (TimesRemaining[i] > TimeRemaining)
+			{
+				TimeRemaining = TimesRemaining[i];
+			}
+		}
+
+		CooldownStart.Broadcast(TimeRemaining);
 	}
 }
