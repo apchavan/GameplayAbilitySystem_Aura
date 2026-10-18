@@ -22,4 +22,13 @@ public:
 	FSetWidgetSwitcherIndex SetWidgetSwitcherIndex;
 
 	void InitializeSlot();
+
+	UPROPERTY()
+	FString PlayerName;
+
+	UPROPERTY()
+	FString LoadSlotName;
+
+	UPROPERTY()
+	int32 SlotIndex;
 };
